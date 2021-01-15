@@ -1,0 +1,14 @@
+version: "2"
+services:
+  project-name:
+    image: project-name/front/${COMPOSE_PROJECT_NAME}:${VERSION}
+    restart: always
+    container_name: ${COMPOSE_PROJECT_NAME}
+    working_dir: /workspace/
+    environment:
+      - NODE_ENV="development"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./static_source:/usr/share/nginx/html/static_source
+    ports:
+      - ${PORT}:8081

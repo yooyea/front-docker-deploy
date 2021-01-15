@@ -1,0 +1,60 @@
+server {
+    listen       8081;
+    server_name  localhost;
+    
+    # 关闭nginx Gzip
+    gzip  off;
+    # 开启静态 Gzip
+    gzip_static on;
+    # 不压缩临界值，大于10K的才压缩
+    gzip_min_length 10k;
+    gzip_buffers 4 16k;
+    # 压缩级别，1-10
+    # gzip_comp_level 6;
+    # 进行压缩的文件类型，缺啥补啥就行了
+    # gzip_types text/plain application/x-javascript text/css application/xml text/javascript application/x-httpd-php image/jpeg image/gif image/png;
+    gzip_types application/javascript application/x-javascript text/css text/html;
+    # IE6对Gzip不怎么友好，不给它Gzip了
+    gzip_disable "MSIE [1-6]\.";
+    # 不需要这玩意
+    gzip_vary off;
+    
+    client_header_timeout 1800;
+    client_body_timeout 1800;
+    send_timeout 1800;
+    keepalive_timeout 1800;
+
+    location / {
+        gzip_static on;
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+        if ($request_filename ~* .*\.(?:htm|html)$)
+        {
+            add_header Cache-Control "private, no-store, no-cache, must-revalidate, proxy-revalidate";
+        }
+        if ($request_filename ~* .*\.(?:js|css)$)
+        {
+            expires      7d;
+        }
+        if ($request_filename ~* .*\.(?:jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm)$)
+        {
+            expires      7d;
+        }
+    }
+    location /project-name {
+        client_max_body_size 1024m;
+        rewrite    /project-name/(.*) /$1 break;
+        proxy_pass ${SERVER_PATH};
+        # 增加用户的真实 IP
+        proxy_set_header   X-Real-IP        $remote_addr;
+        proxy_set_header   X-Forwarded-For  $remote_addr;
+        proxy_connect_timeout 1800s;
+        proxy_send_timeout 1800s;
+        proxy_read_timeout 1800s;
+    }
+    location /static_source {
+        root /usr/share/nginx/html;
+        add_header Content-Disposition: 'attachment;';
+    }
+}
